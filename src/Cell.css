@@ -1,0 +1,23 @@
+.element {
+  shape-rendering: geometricPrecision;
+  text-rendering: geometricPrecision;
+  image-rendering: optimizeQuality;
+  fill-rule: evenodd;
+  clip-rule: evenodd;
+}
+
+.cell {
+  float: left;
+  background-size: 100%;
+  font-weight: 700;
+  position: absolute;
+  top: calc(var(--y) * 26px); /* Adjust according to your cell size */
+  left: calc(var(--x) * 26px); /* Adjust according to your cell size */
+}
+
+.size26 {
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+  line-height: 25px;
+}
