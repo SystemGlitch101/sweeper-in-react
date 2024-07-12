@@ -88,9 +88,7 @@ function RevealBoard(board) {
   return board.map((cell) => { cell.hidden = false; return cell; })
 }
 
-function OpenZeroAreaRecursive(board, i, width, height, visitedBoard) {
-  visitedBoard[i] = true;
-  board[i].hidden = false;
+function OpenZeroAreaRecursive(board, i, width, height) {
   const curr_x = i % width;	
   const curr_y = Math.floor(i / width);	
   
@@ -101,16 +99,18 @@ function OpenZeroAreaRecursive(board, i, width, height, visitedBoard) {
     let newIndex = new_y * width + new_x;
     if (IsValidCoordinate(new_x, width, new_y, height))
     {
-      board[newIndex].hidden = false;
-      if (board[newIndex].data == CL_ZERO && !visitedBoard[newIndex]) {
-        OpenZeroAreaRecursive(board, newIndex, width, height, visitedBoard);
+      if (board[newIndex].hidden) {
+        board[newIndex].hidden = false;
+        if (board[newIndex].data == CL_ZERO) {
+          OpenZeroAreaRecursive(board, newIndex, width, height);
+        }
       }
     }
   }
 }
 
-function OpenZeroArea(board, i, width, height, visitedBoard) {
-  OpenZeroAreaRecursive(board, i, width, height, visitedBoard)
+function OpenZeroArea(board, i, width, height) {
+  OpenZeroAreaRecursive(board, i, width, height)
   return board;
 }
 
@@ -147,9 +147,7 @@ function MinesweeperGame( {width, height, bombCount} ) {
           case CL_FLAG:
             return cell;
           case CL_ZERO:
-            let visitedBoard = new Array(width * height)
-            visitedBoard.fill(false)
-            setBoard(OpenZeroArea(board, i, width, height, visitedBoard))
+            setBoard(OpenZeroArea(board, i, width, height))
         }
         return newCell
       }
