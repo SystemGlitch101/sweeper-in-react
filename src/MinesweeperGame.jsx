@@ -21,24 +21,30 @@ const CL_FLAG = 10;
 const CL_MINE = 11; 
 const CL_MINERED = 12;
 
-function fillCellData(isBomb, board, currentIndex, width) {
+const GAME_READY = 0;
+const GAME_PLAYING = 1;
+const GAME_LOST = 2;
+const GAME_WON = 3;
+
+
+function FillCellData(isBomb, board, currentIndex, width) {
   board[currentIndex] = {
     data: isBomb ? CL_MINE : CL_ZERO,
     x: currentIndex % width,
     y: Math.floor(currentIndex / width),
-    hidden: isBomb,
+    hidden: true,
     flagged: false
   };
 }
 
-function update_square(index, board, width, height) {
+function UpdateSquare(index, board, width, height) {
   let curr_x = index % width;	
   let curr_y = Math.floor(index / width);	
   for (let i = 0; i < 8; ++i)
   {
     let new_x = curr_x + neighbors[i][1];
     let new_y = curr_y + neighbors[i][0];
-    if (new_x >= 0 && new_x < width && new_y >= 0 && new_y < height &&
+    if (IsValidCoordinate(new_x, width, new_y, height) &&
       board[new_y * width + new_x].data == CL_MINE)
     {
       ++board[index].data;
@@ -58,7 +64,7 @@ function GenerateBoard(width, height, bombCount) {
 		isBomb = (Math.floor(Math.random() * 100) <= chanceOfBomb);
 		--currentIndex;
 
-		fillCellData(isBomb, board, currentIndex, width, bombsRemaining);
+		FillCellData(isBomb, board, currentIndex, width, bombsRemaining);
     if (isBomb) {
       --bombsRemaining;
     } 
@@ -72,29 +78,86 @@ function GenerateBoard(width, height, bombCount) {
     {
       continue;
     }
-    update_square(currentIndex, board, width, height);
+    UpdateSquare(currentIndex, board, width, height);
   }
 
   return board;
 }
 
+function RevealBoard(board) {
+  return board.map((cell) => { cell.hidden = false; return cell; })
+}
+
+function OpenZeroAreaRecursive(board, i, width, height, visitedBoard) {
+  visitedBoard[i] = true;
+  board[i].hidden = false;
+  const curr_x = i % width;	
+  const curr_y = Math.floor(i / width);	
+  
+  for (let i = 0; i < 8; ++i)
+  {
+    let new_x = curr_x + neighbors[i][1];
+    let new_y = curr_y + neighbors[i][0];
+    let newIndex = new_y * width + new_x;
+    if (IsValidCoordinate(new_x, width, new_y, height))
+    {
+      board[newIndex].hidden = false;
+      if (board[newIndex].data == CL_ZERO && !visitedBoard[newIndex]) {
+        OpenZeroAreaRecursive(board, newIndex, width, height, visitedBoard);
+      }
+    }
+  }
+}
+
+function OpenZeroArea(board, i, width, height, visitedBoard) {
+  OpenZeroAreaRecursive(board, i, width, height, visitedBoard)
+  return board;
+}
+
+function IsValidCoordinate(new_x, width, new_y, height) {
+  return new_x >= 0 && new_x < width && new_y >= 0 && new_y < height;
+}
+
 function MinesweeperGame( {width, height, bombCount} ) {
+  const [gameState, setGameState] = useState(GAME_READY);
   const [board, setBoard] = useState(GenerateBoard(width, height, bombCount));
 
   const handleClick = (index) => {
+    switch (gameState) {
+      case GAME_READY: 
+        setGameState(GAME_PLAYING)
+      case GAME_PLAYING: 
+        break; 
+      case GAME_LOST: 
+      case GAME_WON:
+        return;
+    }
     let newCell = board[index]
     newCell.hidden = false
-  
-    setBoard(board.map(checkCell))
-  
+    
     const checkCell = (cell, i) => {
+      if (gameState == GAME_LOST) {
+        return cell;
+      }
       if (i === index) {
+        switch (cell.data) {
+          case CL_MINE: 
+            setGameState(GAME_LOST)
+            setBoard(RevealBoard(board))
+          case CL_FLAG:
+            return cell;
+          case CL_ZERO:
+            let visitedBoard = new Array(width * height)
+            visitedBoard.fill(false)
+            setBoard(OpenZeroArea(board, i, width, height, visitedBoard))
+        }
         return newCell
       }
       else {
         return cell;
       }
-    }
+    }  
+    setBoard(board.map(checkCell))
   }
 
   const RenderCell = (cell, index) => {
@@ -113,7 +176,7 @@ function MinesweeperGame( {width, height, bombCount} ) {
   return (
     <>
       {board.map((cell, index) => RenderCell(cell, index))}
-      <button className='reset-button' onClick={() => setBoard(GenerateBoard(width, height, bombCount))}> Reload</button>
+      <button className='reset-button' onClick={() => { setGameState(GAME_READY); setBoard(GenerateBoard(width, height, bombCount))}}/>
     </>
   );
 }

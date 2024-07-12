@@ -14,13 +14,14 @@ import minered from './assets/minered.svg'
 import mine from './assets/mine.svg'
 
 function Cell({ boardIdx, cellIdx, x, y, handleClick}) {
-  const cellMap = [cell0, cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cellhidden, cellflagged, minered, mine]
+  const cellMap = [cell0, cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cellhidden, cellflagged, mine, minered]
 
   return (
     <>
       <img 
         onClick={() => handleClick(boardIdx)}
-        className="element size26 cell"
+        draggable="false"
+        className="element size26 cell selector"
         style={{ '--x': x, '--y': y }}
         src={cellMap[cellIdx]} />
     </>

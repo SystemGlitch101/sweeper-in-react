@@ -11,9 +11,26 @@
   background-size: 100%;
   font-weight: 700;
   position: absolute;
-  top: calc(var(--y) * 26px); /* Adjust according to your cell size */
-  left: calc(var(--x) * 26px); /* Adjust according to your cell size */
+  top: calc(var(--y) * 26px + 100px); /* Adjust according to your cell size */
+  left: calc(var(--x) * 26px + 100px); /* Adjust according to your cell size */
 }
+
+.selector {
+  -user-drag: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.reset-button {
+  background-image: url('./assets/faceunpressed.svg');
+  width: 94px;
+  height: 94px;
+  border-radius: 0px;
+}
+
 
 .size26 {
   width: 26px;
