@@ -13,13 +13,15 @@ import cellflagged from './assets/cellflagged.svg'
 import minered from './assets/minered.svg'
 import mine from './assets/mine.svg'
 
-function Cell({ boardIdx, cellIdx, x, y, handleClick}) {
+function Cell({ boardIdx, cellIdx, x, y, handleClick, handleRightClick}) {
   const cellMap = [cell0, cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cellhidden, cellflagged, mine, minered]
 
   return (
     <>
       <img 
+        // TODO: state machine for input system 
         onClick={() => handleClick(boardIdx)}
+        onContextMenu={ (e) => { e.preventDefault(); handleRightClick(boardIdx); }}
         draggable="false"
         className="element size26 cell selector"
         style={{ '--x': x, '--y': y }}

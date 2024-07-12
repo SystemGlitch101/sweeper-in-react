@@ -84,8 +84,14 @@ function GenerateBoard(width, height, bombCount) {
   return board;
 }
 
-function RevealBoard(board) {
-  return board.map((cell) => { cell.hidden = false; return cell; })
+function RevealBoard(board, boomIdx) {
+  return board.map((cell, i) => { 
+    cell.hidden = false; 
+    if (i === boomIdx) {
+      cell.data = CL_MINERED;
+    }
+    return cell; 
+  })
 }
 
 function OpenZeroAreaRecursive(board, i, width, height) {
@@ -99,7 +105,7 @@ function OpenZeroAreaRecursive(board, i, width, height) {
     let newIndex = new_y * width + new_x;
     if (IsValidCoordinate(new_x, width, new_y, height))
     {
-      if (board[newIndex].hidden) {
+      if (board[newIndex].hidden && !board[newIndex].flagged) {
         board[newIndex].hidden = false;
         if (board[newIndex].data == CL_ZERO) {
           OpenZeroAreaRecursive(board, newIndex, width, height);
@@ -122,15 +128,21 @@ function MinesweeperGame( {width, height, bombCount} ) {
   const [gameState, setGameState] = useState(GAME_READY);
   const [board, setBoard] = useState(GenerateBoard(width, height, bombCount));
 
-  const handleClick = (index) => {
+  const isClickRelevant = () => {
     switch (gameState) {
       case GAME_READY: 
         setGameState(GAME_PLAYING)
       case GAME_PLAYING: 
-        break; 
+        return true;
       case GAME_LOST: 
       case GAME_WON:
-        return;
+        return false;
+    }
+  }
+
+  const handleClick = (index) => {
+    if (!isClickRelevant() || board[index].flagged) {
+      return
     }
     let newCell = board[index]
     newCell.hidden = false
@@ -143,9 +155,9 @@ function MinesweeperGame( {width, height, bombCount} ) {
         switch (cell.data) {
           case CL_MINE: 
             setGameState(GAME_LOST)
-            setBoard(RevealBoard(board))
-          case CL_FLAG:
-            return cell;
+            setBoard(RevealBoard(board, index))
+          // case CL_FLAG:
+          //   return cell;
           case CL_ZERO:
             setBoard(OpenZeroArea(board, i, width, height))
         }
@@ -158,6 +170,20 @@ function MinesweeperGame( {width, height, bombCount} ) {
     setBoard(board.map(checkCell))
   }
 
+  const handleRightClick = (index) => {
+    if (!isClickRelevant()) {
+      return
+    }
+    let newCell = board[index]
+    newCell.flagged = !newCell.flagged
+    
+    const checkCell = (cell, i) => {
+      return (i === index && cell.hidden) ? newCell : cell;
+    }  
+    setBoard(board.map(checkCell))
+  }
+
+
   const RenderCell = (cell, index) => {
     let data = cell.data
     if (cell.hidden == true) {
@@ -167,7 +193,10 @@ function MinesweeperGame( {width, height, bombCount} ) {
         data = CL_HIDE
       }
     }
-    return <Cell key={index} boardIdx={index} cellIdx={data} x={cell.x} y={cell.y} handleClick={handleClick} />
+    return <Cell key={index} boardIdx={index} cellIdx={data} x={cell.x} y={cell.y} 
+      handleClick={handleClick} 
+      handleRightClick={handleRightClick} 
+    />
   }
   
 
